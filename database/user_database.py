@@ -9,10 +9,10 @@ class UserDatabaseSingleton:
         # already created
         return cls._singleton_instance
     
-    def __init__(self, db_name='user_database.db'):
+    def __init__(self):
         if not hasattr(self, '_initialized'):
             self._initialized = True
-            self.db_name = db_name
+            self.db_name = 'database/user_database.db'
             self.conn = sqlite3.connect(self.db_name, check_same_thread=False)
             self.cursor = self.conn.cursor()
             self.create_table()
@@ -55,7 +55,7 @@ class UserDatabaseSingleton:
             print('User not added')
             return False
 
-    def login_user(self, username: str, password: str) -> bool:
+    def get_user(self, username: str, password: str) -> bool:
         '''log in if the user and password are in the database:
         Return True if that so,
         False otherwise'''
@@ -136,5 +136,5 @@ if __name__ == "__main__":
     db = UserDatabaseSingleton()
     if db.add_user('giovanni', 'admin'):
         print('User added!')
-    if db.login_user('giovanni', 'admin'):
+    if db.get_user('giovanni', 'admin'):
         print('Logged in!')

@@ -15,7 +15,7 @@ def hello_world():
 @app_2.post('/update/database')
 def new_user():
     data = request.get_json()
-    if db.write(**data):
+    if db.sign_in(**data):
         return 'Data has been saved!'
     return 'Data has not been saved!'
 
