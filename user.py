@@ -7,13 +7,25 @@ class user():
 
 
         
-url_1 = "http://127.0.0.1:5000"
+url = "https://10.50.169.158:5100"
 
 good_data = {
     'username': 'username',
-    'password': 'password'
+    'password': 'password',
+    'altri dati': 'altri dati a caso',
 }
 
-response = requests.post(url_1 + '/update/database', json=good_data)
+# response = requests.get(url + "/debug_path_get", verify=False)
+# print(response.status_code)
+# print(response.text)
+try:
+    response_2 = requests.post(url + "/debug_path_post", json=good_data, verify=False)
+    print(response_2.text)
+    print(response_2.status_code)
+except Exception as e:
+    print(e)
 
-print(response.text + 'ciao')
+# connect directly to the flask server
+# response = requests.post("http://127.0.0.1:5000/debug_path_post", json=good_data)
+# print(response.text)
+# print(response.status_code)
