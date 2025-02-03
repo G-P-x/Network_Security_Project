@@ -126,20 +126,22 @@ def start_firewall():
         context = SSLContext()
         context.load_cert_chain("cert.pem", "key.pem")  # <--- Carica i file cert.pem e key.pem
         secure_server_socket = context.wrap_socket(server_socket, server_side=True)  # <--- Usa il contesto
-
-        while True:
-            print("Waiting for a connection...")
-            client_socket, client_address = secure_server_socket.accept()  # <--- Accetta la connessione
-            print(f"Connection from {client_address} accepted")
-            try:
-                client_thread = threading.Thread(target=handle_client, args=(client_socket, client_address))
-                client_thread.start()
-            except SSLError:
-                print("Non-HTTPS connection detected")
-                client_socket.close()
-
+    
     except Exception as e:
         print(f"Errore durante l'avvio del firewall: {e}")
+
+    while True:
+        print("Waiting for a connection...")
+        try:
+            client_socket, client_address = secure_server_socket.accept()  # <--- Accetta la connessione
+            print(f"HTTPS Connection from {client_address} accepted")
+            client_thread = threading.Thread(target=handle_client, args=(client_socket, client_address))
+            client_thread.start()
+        except SSLError:
+            print("Non-HTTPS connection detected")
+            # client_socket is not created
+            continue
+
 
 if __name__ == "__main__":
     start_firewall()
