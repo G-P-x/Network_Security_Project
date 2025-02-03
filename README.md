@@ -18,3 +18,9 @@ Security Services:
 -   data integrity (hashing)
 -   non repudiation (digital signature)
 
+
+HOW TO WORK WITH THE FIREWALL
+
+1. run the server
+2. run the firewall
+3. run the client

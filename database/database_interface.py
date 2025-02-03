@@ -1,4 +1,4 @@
-from user_database import UserDatabaseSingleton as db_user
+from database.user_database import UserDatabaseSingleton as db_user
 class db_interface:
     def __init__(self):
         self.user_db = db_user()
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     assert db.check_input(username=False, password='password') == False
     assert db.check_input(username='username') == False
 
-    assert db.sign_in(username='username', password='password') == True
+    assert db.sign_in(username='my_name', password='password') == True
     assert db.login(username='username', password='password') == True
 
         
