@@ -1,11 +1,14 @@
 import requests
 
-url_2 = "http://127.0.0.1:5001"
+SERVER_IP_ADDRESS = "192.168.1.56"
+
+url_2 = f"http://{SERVER_IP_ADDRESS}:5100/update/database"
 
 bad_data = {
     'username': 'user',
     'password': 'password',
 }
 
-response_2 = requests.post(url_2 + '/update/database', json=bad_data)
-print(response_2.text)
+response = requests.post(url_2, json=bad_data)
+# response = requests.get(f"http://{SERVER_IP_ADDRESS}:5100/")
+print(response.text)
