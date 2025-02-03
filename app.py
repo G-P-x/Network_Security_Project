@@ -1,8 +1,5 @@
 from flask import Flask, request
 from database.database_interface import db_interface
-from threading import Thread
-import time
-import CONFIGURATION as cf
 
 app = Flask(__name__)
 db = db_interface()
@@ -10,6 +7,11 @@ db = db_interface()
 @app.route('/')
 def hello_world():
     return "Hello, World!"
+
+@app.route('/test_post', methods=['POST'])
+def testing():
+    print(request.get_json())
+    return "data received"
 
 @app.post('/sign_in')
 def new_user():

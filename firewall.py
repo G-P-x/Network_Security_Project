@@ -3,7 +3,7 @@ import threading
 
 LISTEN_PORT = 5100
 FLASK_PORT = 5000
-ALLOWED_IPS = ("127.0.0.1", "192.168.1.56", "192.168.1.100")
+ALLOWED_IPS = ("127.0.0.1", "192.168.1.56", "192.168.1.100", "10.131.0.64")
 
 def handle_client(client_socket: socket.socket, client_address):
     try:
