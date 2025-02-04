@@ -7,7 +7,7 @@ class user():
 
 
         
-url = "https://10.50.169.158:5100"
+url = "https://10.50.172.110:5100"
 
 good_data = {
     'username': 'username',
@@ -26,6 +26,6 @@ except Exception as e:
     print(e)
 
 # connect directly to the flask server
-# response = requests.post("http://127.0.0.1:5000/debug_path_post", json=good_data)
+# response = requests.post("https://127.0.0.1:5000/debug_path_post", json=good_data, verify=False)
 # print(response.text)
 # print(response.status_code)

@@ -6,7 +6,7 @@ import requests
 
 LISTEN_PORT = 5100
 FLASK_PORT = 5000
-ALLOWED_IPS = ("127.0.0.1", "192.168.1.56", "192.168.1.100")
+ALLOWED_IPS = ("127.0.0.1", "192.168.1.56", "192.168.1.100", "10.50.169.158", "192.168.1.174")
 
 def receive_data_from_client(client_socket: socket.socket) -> bytes: 
     '''Returns the data received from the client as a buffer'''   
@@ -31,7 +31,7 @@ def receive_data_from_client(client_socket: socket.socket) -> bytes:
             
         if b'Content-Length' not in headers.keys():
             print("Content-Length non presente")
-            return start_line__header
+            return start_line__header # qua potrei mettere un return None o un raise Exception perché una post request senza body non ha senso
         # ricezione body
         body = client_socket.recv(int(headers[b'Content-Length']))
         client_request = start_line__header + body
@@ -67,7 +67,7 @@ def check_ip_address(client_ip) -> bool:
     
 def send_data_to_client(client_socket: socket.socket, data):
     try:
-        client_socket.sendall(data)
+        client_socket.sendall(data) # <--- Invia la risposta al client in HTTP
     except Exception as e:
         print(f"Errore durante l'invio al client: {e}")
         client_socket.close()
@@ -104,7 +104,7 @@ def handle_client(client_socket: socket.socket, client_address):
         print(f"Errore durante l'invio al client: {e}")
         client_socket.close()
         return
-    # Chiudi i socket (assicurati che vengano chiusi anche in caso di eccezioni)
+    # chiudo i socket qualora non siano già stati chiusi
     try:
         client_socket.close()
     except:
