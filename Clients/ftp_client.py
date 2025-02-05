@@ -2,7 +2,8 @@ from ftplib import FTP
 
 try:
     ftp = FTP()
-    ftp.connect("127.0.0.1", 5100)  # Connect to your FTP server on port 2121
+    # ftp.connect("127.0.0.1", 2121)  # Connect to your FTP server on port 2121 <---works
+    ftp.connect("127.0.0.1", 5100)  # Connect to your FTP server through the firewall on port 5100
     response = ftp.login("anonymous", "user@example.com")  # Login with credentials
     print(response)  # Should print "230 Login successful."
 except Exception as e:
