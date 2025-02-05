@@ -10,13 +10,62 @@ ALLOWED_IPS = ("127.0.0.1", "192.168.1.56", "192.168.1.100")
 FLASK_PORT = 5000
 FTP_PORT = 2121
 
-def check_ip_address(client_ip) -> bool:
+def check_ip_address(connection, client_ip) -> bool:
     '''True if the client_ip is in the ALLOWED_IPS list, False otherwise'''
-    if client_ip not in ALLOWED_IPS:
-        print(f"❌ BLOCKED: {client_ip} on HTTPS port")
-        return False
-    print(f"✅ ALLOWED: Forwarding {client_ip} to Flask server on port 5000")
-    return True
+    if isinstance(connection, FTP_handler):
+        if client_ip not in ALLOWED_IPS:
+            print(f"❌ BLOCKED: {client_ip}")
+            return False
+        print(f"✅ ALLOWED: Forwarding {client_ip} to FTP server on port 2121")
+        return True
+    if isinstance(connection, HTTPS_handler):
+        if client_ip not in ALLOWED_IPS:
+            print(f"❌ BLOCKED: {client_ip}")
+            return False
+        print(f"✅ ALLOWED: Forwarding {client_ip} to Flask server on port 5000")
+        return True
+    return False
+
+class FTP_handler():
+    def __init__(self, listen_port = 5200):
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.bind(("0.0.0.0", listen_port))
+        self.server_socket.listen(5)
+        
+    def ftp_start(self):
+        while True:
+            print("Waiting for a FTP connection...")
+            client_socket, client_address = self.server_socket.accept()
+            print(f"FTP Connection from {client_address} accepted")
+            client_thread = threading.Thread(target=self.handle_client, args=(client_socket, client_address))
+            client_thread.start()
+    
+    def handle_client(self, client_socket: socket.socket, client_address):
+        if not check_ip_address(self, client_address[0]):
+            client_socket.close()
+            return
+        
+        # establish connection with the FTP server
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as ftp_socket:
+            try:
+                ftp_socket.connect(("127.0.0.1", FTP_PORT))
+                print("FTP Connection to FTP server established") # <--- till here it works
+                client_socket.sendall(b"220 Connection established\n")
+                while True:
+                    part = client_socket.recv(BUFFER_SIZE) # stack here
+                    if not part:
+                        break
+                    ftp_socket.sendall(part)
+                    part = ftp_socket.recv(BUFFER_SIZE)
+                    if not part:
+                        break
+                    client_socket.sendall(part)
+            except Exception as e:
+                print(f"Error while connecting to FTP server: {e}")
+                client_socket.close()
+                return
+        client_socket.close()
+        
 
 class HTTPS_handler():
     def __init__(self, listen_port = 5100):
@@ -85,7 +134,7 @@ class HTTPS_handler():
         
     def handle_client(self, client_socket, client_address):
         '''Handle the client connection'''
-        if not check_ip_address(client_address[0]):
+        if not check_ip_address(self, client_address[0]):
             client_socket.close()
             return
         
