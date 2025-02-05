@@ -5,21 +5,21 @@ from ssl import SSLError, SSLContext
 import requests
 
 BUFFER_SIZE = 4096
-ALLOWED_IPS = ("127.0.0.1", "192.168.1.56", "192.168.1.100")
+ALLOWED_IPS = ("127.0.0.1")
 
 FLASK_PORT = 5000
 FTP_PORT = 2121
 
-def check_ip_address(connection, client_ip) -> bool:
+def check_ip_address(connection, client_ip, allowed_ips = ALLOWED_IPS) -> bool:
     '''True if the client_ip is in the ALLOWED_IPS list, False otherwise'''
     if isinstance(connection, FTP_handler):
-        if client_ip not in ALLOWED_IPS:
+        if client_ip not in allowed_ips:
             print(f"❌ BLOCKED: {client_ip}")
             return False
         print(f"✅ ALLOWED: Forwarding {client_ip} to FTP server on port 2121")
         return True
     if isinstance(connection, HTTPS_handler):
-        if client_ip not in ALLOWED_IPS:
+        if client_ip not in allowed_ips:
             print(f"❌ BLOCKED: {client_ip}")
             return False
         print(f"✅ ALLOWED: Forwarding {client_ip} to Flask server on port 5000")
@@ -27,7 +27,8 @@ def check_ip_address(connection, client_ip) -> bool:
     return False
 
 class FTP_handler():
-    def __init__(self, listen_port = 5200):
+    def __init__(self, listen_port = 5200, allowed_ips = ALLOWED_IPS):
+        self.allowed_ips = allowed_ips
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.bind(("0.0.0.0", listen_port))
         self.server_socket.listen(5)
@@ -41,16 +42,28 @@ class FTP_handler():
             client_thread.start()
     
     def handle_client(self, client_socket: socket.socket, client_address):
-        if not check_ip_address(self, client_address[0]):
+        if not check_ip_address(self, client_address[0], self.allowed_ips):
             client_socket.close()
             return
         
         # establish connection with the FTP server
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as ftp_socket:
-            try:
+            try:               
+                # DO: receive the first command from the client and analyze it
+                client_socket.sendall(b"220 Connection established\n") # <--- Send the response to the client saying that the connection is established
+                part = client_socket.recv(BUFFER_SIZE) # now I expect the client to send the first command
+                # analyze the command
+                if not b'USER' in part[:4]:
+                    print("❌ BLOCKED: Non-FTP connection detected")
+                    return
+                # Me firewall connects to the local ftp server to send the command
                 ftp_socket.connect(("127.0.0.1", FTP_PORT))
-                print("FTP Connection to FTP server established") # <--- till here it works
-                client_socket.sendall(b"220 Connection established\n")
+                print("firewall connection to FTP server established")           
+                ftp_socket.sendall(part) 
+                # DO: receive the response from the FTP server and send it to the client
+                part = ftp_socket.recv(BUFFER_SIZE)
+                client_socket.sendall(part)
+                # DO: keep the connection open and forward the commands and responses between the client and the FTP server             
                 while True:
                     part = client_socket.recv(BUFFER_SIZE) # stack here
                     if not part:
@@ -68,7 +81,8 @@ class FTP_handler():
         
 
 class HTTPS_handler():
-    def __init__(self, listen_port = 5100):
+    def __init__(self, listen_port = 5100, allowed_ips = ALLOWED_IPS):
+        self.allowed_ips = allowed_ips
         self.context = ssl.SSLContext()
         self.context.load_cert_chain("cert.pem", "key.pem")
         self.server_socket = self.generate_secure_socket(listen_port)
@@ -89,7 +103,7 @@ class HTTPS_handler():
                 client_thread = threading.Thread(target=self.handle_client, args=(client_socket, client_address))
                 client_thread.start()
             except SSLError:
-                print("Non-HTTPS connection detected")
+                print("❌ BLOCKED: Non-HTTPS connection detected")
                 continue
             
     def communicate_to_flask(self, client_socket: socket.socket, client_request: bytes) -> None:
@@ -134,7 +148,7 @@ class HTTPS_handler():
         
     def handle_client(self, client_socket, client_address):
         '''Handle the client connection'''
-        if not check_ip_address(self, client_address[0]):
+        if not check_ip_address(self, client_address[0], self.allowed_ips):
             client_socket.close()
             return
         
