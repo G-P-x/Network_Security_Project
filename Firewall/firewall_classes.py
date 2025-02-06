@@ -1,8 +1,6 @@
 import socket
 import threading
-import ssl
 from ssl import SSLError, SSLContext
-import requests
 
 BUFFER_SIZE = 4096
 ALLOWED_IPS = ("127.0.0.1")
@@ -56,6 +54,9 @@ class FTP_handler():
                 if not b'USER' in part[:4]:
                     print("❌ BLOCKED: Non-FTP connection detected")
                     return
+                # if b'SSH' in part[:3]:
+                #     print("❌ BLOCKED: SSH connection detected")
+                #     return
                 # Me firewall connects to the local ftp server to send the command
                 ftp_socket.connect(("127.0.0.1", FTP_PORT))
                 print("firewall connection to FTP server established")           
@@ -83,7 +84,7 @@ class FTP_handler():
 class HTTPS_handler():
     def __init__(self, listen_port = 5100, allowed_ips = ALLOWED_IPS):
         self.allowed_ips = allowed_ips
-        self.context = ssl.SSLContext()
+        self.context = SSLContext()
         self.context.load_cert_chain("cert.pem", "key.pem")
         self.server_socket = self.generate_secure_socket(listen_port)
         

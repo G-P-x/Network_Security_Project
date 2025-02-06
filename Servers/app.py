@@ -10,7 +10,7 @@ def hello_world():
 
 @app.route('/debug_path_get', methods=['GET'])
 def debug_path_get():
-    return "Data sended through a get request!"
+    return "Get request worked!"
 
 @app.route('/debug_path_post', methods=['POST'])
 def debug_path():
@@ -18,10 +18,10 @@ def debug_path():
         print(request)
         data = request.get_json()
         print(data)
-        return "Data received!"
+        return "Data received through post request!"
     except Exception as e:
         print(e)
-        return "Data not received!"
+        return "❌ Data not received"
 
 # @app.post('/sign_in')
 # def new_user():
