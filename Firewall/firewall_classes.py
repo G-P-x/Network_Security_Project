@@ -66,8 +66,9 @@ class FTP_handler():
                 client_socket.sendall(part)
                 # DO: keep the connection open and forward the commands and responses between the client and the FTP server             
                 while True:
-                    part = client_socket.recv(BUFFER_SIZE) # stack here
-                    if not part:
+                    part = client_socket.recv(BUFFER_SIZE) 
+                    if not part or b'STOR' in part[:4]: # <--- If the command is STOR, the firewall blocks the connection
+                        print("❌ BLOCKED: STOR command detected")
                         break
                     ftp_socket.sendall(part)
                     part = ftp_socket.recv(BUFFER_SIZE)

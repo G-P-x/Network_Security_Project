@@ -1,1 +1,5 @@
 Flask
+twisted
+socket
+threading
+requests

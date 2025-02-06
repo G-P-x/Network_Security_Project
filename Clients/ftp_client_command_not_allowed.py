@@ -65,8 +65,33 @@ def download_file(sock, filename):
 
     data_sock.close()
 
+def upload_file(sock, filename):
+    """Carica un file sul server FTP."""
+    response = send_command(sock, 'PASV')
+    print(response)
+    start = response.find('(') + 1
+    end = response.find(')', start)
+    pasv_info = response[start:end].split(',')
+    pasv_ip = '.'.join(pasv_info[:4])
+    pasv_port = (int(pasv_info[4]) << 8) + int(pasv_info[5])
+
+    data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    data_sock.connect((pasv_ip, pasv_port))
+
+    response = send_command(sock, f'STOR {filename}')
+    print(response)
+
+    with open(filename, 'rb') as f:
+        while True:
+            data = f.read(4096)
+            if not data:
+                break
+            data_sock.sendall(data)
+
+    data_sock.close()
+
 def main():
-    server = '10.50.172.110'
+    server = '127.0.0.1'
     port = 5200
     username = 'anonymous'
     password = 'user@example.com'
@@ -78,7 +103,7 @@ def main():
         print(response)
 
         login_ftp(sock, username, password)
-        list_files(sock)
+        upload_file(sock, filename)
         download_file(sock, filename)
 
         send_command(sock, 'QUIT')

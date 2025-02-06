@@ -12,11 +12,9 @@ We want to implement:
 -	A security service increases the security level when sending, processing, storing, accessing information to prevent eventual security attacks
 
 Security Services:
--   peer authentication
+-   only server authenticate
 -   access control
--   confidentiality (encryption/traffic padding)
--   data integrity (hashing)
--   non repudiation (digital signature)
+-   confidentiality (encryption with https)
 
 
 HOW TO WORK WITH THE FIREWALL
