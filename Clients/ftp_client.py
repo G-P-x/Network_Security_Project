@@ -2,9 +2,11 @@ import socket
 
 def send_command(sock, command):
     """Invia un comando al server FTP e ritorna la risposta."""
+    print("CLIENT: sending {command}".format(command=command))
     sock.sendall(command.encode('utf-8') + b'\r\n')
     response = sock.recv(4096).decode('utf-8')
-    return response
+    print("SERVER: {response}".format(response=response))
+    return f"SERVER: {response}"
 
 def connect_ftp(server, port):
     """Connette al server FTP e ritorna il socket."""
@@ -15,14 +17,14 @@ def connect_ftp(server, port):
 def login_ftp(sock, username, password):
     """Effettua il login al server FTP."""
     response = send_command(sock, f'USER {username}')
-    print(response)
+    
     response = send_command(sock, f'PASS {password}')
-    print(response)
+    
 
 def list_files(sock):
     """Elenca i file nella directory corrente."""
     response = send_command(sock, 'PASV')
-    print(response)
+    
     start = response.find('(') + 1
     end = response.find(')', start)
     pasv_info = response[start:end].split(',')
@@ -33,7 +35,7 @@ def list_files(sock):
     data_sock.connect((pasv_ip, pasv_port))
 
     response = send_command(sock, 'LIST')
-    print(response)
+    
 
     data_response = data_sock.recv(4096).decode('utf-8')
     print(data_response)
@@ -43,7 +45,7 @@ def list_files(sock):
 def download_file(sock, filename):
     """Scarica un file dal server FTP."""
     response = send_command(sock, 'PASV')
-    print(response)
+    
     start = response.find('(') + 1
     end = response.find(')', start)
     pasv_info = response[start:end].split(',')
@@ -54,7 +56,7 @@ def download_file(sock, filename):
     data_sock.connect((pasv_ip, pasv_port))
 
     response = send_command(sock, f'RETR {filename}')
-    print(response)
+    
 
     with open("Clients/temp/" + filename, 'wb') as f:
         while True:
@@ -75,7 +77,7 @@ def main():
     try:
         sock = connect_ftp(server, port)
         response = sock.recv(4096).decode('utf-8')
-        print(response)
+        print("SERVER: " + response)
 
         login_ftp(sock, username, password)
         list_files(sock)

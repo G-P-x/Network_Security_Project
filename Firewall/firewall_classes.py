@@ -1,6 +1,10 @@
+from os import close
 import socket
 import threading
 from ssl import SSLError, SSLContext
+from tkinter import N
+
+from flask import cli
 
 BUFFER_SIZE = 4096
 ALLOWED_IPS = ("127.0.0.1")
@@ -38,6 +42,14 @@ class FTP_handler():
             print(f"FTP Connection from {client_address} accepted")
             client_thread = threading.Thread(target=self.handle_client, args=(client_socket, client_address))
             client_thread.start()
+
+    def close_connection(self, client_socket: socket.socket, ftp_socket = None) -> None:
+        '''Close the client and FTP server connections'''
+        
+        client_socket.close()
+        if isinstance(ftp_socket, socket.socket):
+            ftp_socket.close()
+        return
     
     def handle_client(self, client_socket: socket.socket, client_address):
         if not check_ip_address(self, client_address[0], self.allowed_ips):
@@ -53,12 +65,21 @@ class FTP_handler():
                 # analyze the command
                 if not b'USER' in part[:4]:
                     print("❌ BLOCKED: Non-FTP connection detected")
+                    client_socket.sendall(b"You're not allowed to connect to the server\n")
+                    self.close_connection(client_socket)
                     return
                 # if b'SSH' in part[:3]:
                 #     print("❌ BLOCKED: SSH connection detected")
                 #     return
+
                 # Me firewall connects to the local ftp server to send the command
                 ftp_socket.connect(("127.0.0.1", FTP_PORT))
+                confirm_ftp = ftp_socket.recv(BUFFER_SIZE) # expected 220
+                if b'220' not in confirm_ftp:
+                    print("Error while connecting to FTP server")
+                    client_socket.sendall(b'505 Error with the FTP server, closing connection...\r\n')
+                    client_socket.close()
+                    return
                 print("firewall connection to FTP server established")           
                 ftp_socket.sendall(part) 
                 # DO: receive the response from the FTP server and send it to the client
@@ -67,12 +88,21 @@ class FTP_handler():
                 # DO: keep the connection open and forward the commands and responses between the client and the FTP server             
                 while True:
                     part = client_socket.recv(BUFFER_SIZE) 
-                    if not part or b'STOR' in part[:4]: # <--- If the command is STOR, the firewall blocks the connection
+                    if not part:
+                        client_socket.close()
+                        ftp_socket.close()
+                        break
+                    if b'STOR' in part[:4]: # <--- If the command is STOR, the firewall blocks the connection
                         print("❌ BLOCKED: STOR command detected")
+                        client_socket.sendall(b"STOR command is not allowed, closing connection\n")
+                        client_socket.close()
+                        ftp_socket.close()
                         break
                     ftp_socket.sendall(part)
                     part = ftp_socket.recv(BUFFER_SIZE)
                     if not part:
+                        client_socket.close()
+                        ftp_socket.close()
                         break
                     client_socket.sendall(part)
             except Exception as e:
