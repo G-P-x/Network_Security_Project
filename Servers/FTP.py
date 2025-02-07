@@ -3,7 +3,12 @@ from twisted.cred.portal import Portal
 from twisted.internet import reactor
 from twisted.protocols.ftp import FTPFactory, FTPRealm
 
-portal = Portal(FTPRealm("/home/giovanni/Desktop/MASTER_DEGREE_PROJECTS/Network_Security_Project/Public"), [AllowAnonymousAccess()])
+import os
+current_directory = os.getcwd()
+relative_path = "Public"
+print(current_directory)
+
+portal = Portal(FTPRealm(os.path.join(current_directory,relative_path)), [AllowAnonymousAccess()])
 
 factory = FTPFactory(portal)
 
