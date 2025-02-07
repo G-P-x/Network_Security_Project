@@ -1,5 +1,4 @@
 Flask
 twisted
-socket
-threading
 requests
+paramiko
