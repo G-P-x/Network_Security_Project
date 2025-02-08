@@ -1,4 +1,3 @@
-from os import close
 import socket
 import threading
 from ssl import SSLError, SSLContext
@@ -13,13 +12,13 @@ def check_ip_address(connection, client_ip, allowed_ips = ALLOWED_IPS) -> bool:
     '''True if the client_ip is in the ALLOWED_IPS list, False otherwise'''
     if isinstance(connection, FTP_handler):
         if client_ip not in allowed_ips:
-            print(f"❌ BLOCKED: {client_ip}")
+            print(f"❌ BLOCKED --- Anauthorised IP Address detected: {client_ip}")
             return False
         print(f"✅ ALLOWED: Forwarding {client_ip} to FTP server on port 2121")
         return True
     if isinstance(connection, HTTPS_handler):
         if client_ip not in allowed_ips:
-            print(f"❌ BLOCKED: {client_ip}")
+            print(f"❌ BLOCKED --- Anauthorised IP Address detected: {client_ip}")
             return False
         print(f"✅ ALLOWED: Forwarding {client_ip} to Flask server on port 5000")
         return True
@@ -36,7 +35,7 @@ class FTP_handler():
         while True:
             print("Waiting for a FTP connection...")
             client_socket, client_address = self.server_socket.accept()
-            print(f"FTP Connection from {client_address} accepted")
+            print(f"TCP handshake from {client_address} accepted")
             client_thread = threading.Thread(target=self.handle_client, args=(client_socket, client_address))
             client_thread.start()
 
@@ -128,11 +127,12 @@ class HTTPS_handler():
             print("Waiting for a https connection...")
             try:
                 client_socket, client_address = self.server_socket.accept()
-                print(f"HTTPS Connection from {client_address} accepted")
+                print(f"TCP Handshake from {client_address} accepted")
                 client_thread = threading.Thread(target=self.handle_client, args=(client_socket, client_address))
                 client_thread.start()
             except SSLError:
                 print("❌ BLOCKED: Non-HTTPS connection detected")
+                # client_socket.close()
                 continue
             
     def communicate_to_flask(self, client_socket: socket.socket, client_request: bytes) -> None:
@@ -150,7 +150,7 @@ class HTTPS_handler():
         return
     
     def receive_from_client(self, client_socket: socket.socket) -> bytes:
-        '''Receive and return the client request'''
+        '''Receive and return the client request and inspect it'''
         start_line__header = b""
         try:
             while start_line__header[-4:] != b'\r\n\r\n':
@@ -164,13 +164,16 @@ class HTTPS_handler():
                     break
                 key, value = line.split(b':', 1) # <--- Split solo alla prima occorrenza
                 headers[key] = value
-            if b'Content-Length' not in headers.keys():
-                print("Content-Length non presente")
+            if b'Content-Length' not in headers.keys() or int(headers[b'Content-Length']) == 0:
+                print("❌ BLOCKED: Content-Length header not present or empty")
+                client_socket.sendall(b"Data error, closing connection...\n")
+                client_socket.close()
                 return False # <--- Se non c'è Content-Length, non possiamo ricevere il body
             body = client_socket.recv(int(headers[b'Content-Length']))
+            print(f"✅ ALLOWED payload: {body}")
             return start_line__header + body
         except Exception as e:
-            print(f"Error while receiving from client: {e}")
+            print(f"❌ BLOCKED: 400 Bad Request, error while receiving from client: {e}")
             client_socket.close()
             return False
 
@@ -178,6 +181,7 @@ class HTTPS_handler():
     def handle_client(self, client_socket: socket.socket, client_address):
         '''Handle the client connection'''
         if not check_ip_address(self, client_address[0], self.allowed_ips):
+            client_socket.sendall(b"You're not allowed to connect to the server, closing connection...\n")
             client_socket.close()
             return
         

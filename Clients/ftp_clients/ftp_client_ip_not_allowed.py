@@ -1,4 +1,9 @@
 import socket
+import os
+import sys
+# Add the Clients directory to the path so I can import get_local_ip
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from get_local_ip import get_local_ip
 
 def send_command(sock, command):
     """Invia un comando al server FTP e ritorna la risposta."""
@@ -91,7 +96,8 @@ def upload_file(sock, filename):
     data_sock.close()
 
 def main():
-    server = '10.50.172.110'
+    server = get_local_ip()
+    print(f"Local IP address: {server}")
     port = 5200
     username = 'anonymous'
     password = 'user@example.com'

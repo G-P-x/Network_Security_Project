@@ -1,6 +1,11 @@
 import requests
-       
-URL = "https://10.50.172.110:5100"
+import os
+import sys
+# Add the Clients directory to the path so I can import get_local_ip
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from get_local_ip import get_local_ip
+
+URL = "https://" + get_local_ip() + ":5100"
 
 good_data = {
     'username': 'username',
@@ -8,9 +13,6 @@ good_data = {
     'altri dati': 'altri dati a caso',
 }
 
-# response = requests.get(url + "/debug_path_get", verify=False)
-# print(response.status_code)
-# print(response.text)
 try:
     response_2 = requests.post(URL + "/debug_path_post", json=good_data, verify=False)
     print(response_2.text)

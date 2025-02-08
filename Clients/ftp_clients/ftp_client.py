@@ -58,7 +58,7 @@ def download_file(sock, filename):
     response = send_command(sock, f'RETR {filename}')
     
 
-    with open("Clients/temp/" + filename, 'wb') as f:
+    with open("Clients/ftp_clients/temp" + filename, 'wb') as f:
         while True:
             data = data_sock.recv(4096)
             if not data:
