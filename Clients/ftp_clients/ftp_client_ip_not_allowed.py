@@ -97,7 +97,9 @@ def upload_file(sock, filename):
 
 def main():
     server = get_local_ip()
-    print(f"Local IP address: {server}")
+    if server == '127.0.0.1':
+        print("Connect to the network to use this client")
+        return
     port = 5200
     username = 'anonymous'
     password = 'user@example.com'

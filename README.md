@@ -4,21 +4,8 @@ Network Security Project
 
 --Python Version 3.13
  
-A client-server connection where the client may be a raspberry pi that takes data from IoT devices or an authorized user that may read the data.
-We want to implement:
--	A firewall that blocks all connection to the server apart from the client
--	Protected data transfert.
--	Communication channel between IoT devices and raspberry pi.
--	A security service increases the security level when sending, processing, storing, accessing information to prevent eventual security attacks
-
-Security Services:
--   only server authenticate
--   access control
--   confidentiality (encryption with https)
-
-
-HOW TO WORK WITH THE FIREWALL
-
-1. run the server
-2. run the firewall
-3. run the client
+How to run a demo:
+1. pip install -r requirements.txt
+2. run, in a dedicated terminal each, the module app.py and FTP.py
+3. run in a dedicate terminal the module firewall.py
+4. run whatever client you want to test

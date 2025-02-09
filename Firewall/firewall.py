@@ -49,6 +49,7 @@ class FTP_handler():
     
     def handle_client(self, client_socket: socket.socket, client_address):
         if not check_ip_address(self, client_address[0], self.allowed_ips):
+            client_socket.sendall(b"You're not allowed to connect to the server, closing connection...\n")
             client_socket.close()
             return
         
@@ -168,7 +169,7 @@ class HTTPS_handler():
                 print("❌ BLOCKED: Content-Length header not present or empty")
                 client_socket.sendall(b"Data error, closing connection...\n")
                 client_socket.close()
-                return False # <--- Se non c'è Content-Length, non possiamo ricevere il body
+                return False # <--- Se non c'è Content-Length, non ricevo il payload
             body = client_socket.recv(int(headers[b'Content-Length']))
             print(f"✅ ALLOWED payload: {body}")
             return start_line__header + body
@@ -199,9 +200,9 @@ class HTTPS_handler():
 if __name__ == "__main__":
     HTTPS_LISTEN_PORT = 5100
     FTP_LISTEN_PORT = 5200
-    ALLOWED_IPS = ("127.0.0.1", "192.168.1.56", "192.168.1.100")
-    ftp_handler = FTP_handler(FTP_LISTEN_PORT, ALLOWED_IPS)
+    allowed_ips = ("127.0.0.1", "192.168.1.56", "192.168.1.100")
+    ftp_handler = FTP_handler(FTP_LISTEN_PORT, allowed_ips)
     ftp_thread = threading.Thread(target=ftp_handler.ftp_start)
-    https_handler = HTTPS_handler(HTTPS_LISTEN_PORT, ALLOWED_IPS)
+    https_handler = HTTPS_handler(HTTPS_LISTEN_PORT, allowed_ips)
     ftp_thread.start()
     https_handler.https_start()
